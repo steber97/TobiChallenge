@@ -39,7 +39,10 @@ class ChatApiMessage(APIView):
     def __handle_conversation_update_activity(self, activity):
         if activity.members_added[0].id != activity.recipient.id:
             credentials = MicrosoftAppCredentials(APP_ID, APP_PASSWORD)
-            reply = ChatApiMessage.__create_reply_activity(activity, 'Hello and welcome to the echo bot!')
+            reply = ChatApiMessage.__create_reply_activity(activity, 'Ciao, sono esse3, il tuo assistente universitario!')
+            connector = ConnectorClient(credentials, base_url=reply.service_url)
+            connector.conversations.send_to_conversation(reply.conversation.id, reply)
+            reply = ChatApiMessage.__create_reply_activity(activity,'Come posso aiutarti?')
             connector = ConnectorClient(credentials, base_url=reply.service_url)
             connector.conversations.send_to_conversation(reply.conversation.id, reply)
         return HttpResponse(status=202)
