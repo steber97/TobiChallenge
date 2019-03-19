@@ -1,11 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.views import APIView
-from django.views.generic.base import View
-from rest_framework.decorators import api_view
 
-from rest_framework.response import Response
-from django.http import JsonResponse
 
 # Create your views here.
 from django.views import View
@@ -17,6 +13,8 @@ from botbuilder.schema import (Activity, ActivityTypes)
 from botframework.connector import ConnectorClient
 from botframework.connector.auth import (MicrosoftAppCredentials,
                                          JwtTokenValidation, SimpleCredentialProvider)
+
+from .utils import manage_chat
 
 APP_ID = ''
 APP_PASSWORD = ''
@@ -53,12 +51,11 @@ class ChatApiMessage(APIView):
 
         #call elaborate function [input: activity.text, output: to_send]
 
-        to_send = 'You said: %s' % activity.text
+        to_send = manage_chat(activity.text, activity.channel_data['clientActivityID'])
 
         reply = ChatApiMessage.__create_reply_activity(activity, to_send)
         connector.conversations.send_to_conversation(reply.conversation.id, reply)
         return HttpResponse(status=200)
-
 
     def __unhandled_activity(self):
         return HttpResponse(status=404)
