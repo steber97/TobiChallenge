@@ -48,17 +48,17 @@ class TaxRecord(models.Model):
 
 
 class Message(models.Model):
-    vodafone_id = models.IntegerField()
+    vodafone_id = models.IntegerField(blank=True, null=True)
     text = models.TextField(max_length=1024, blank=True, null=True)
     user = models.ForeignKey(User, on_delete=models.PROTECT, blank=True, null=True)
-    timestamp = models.TimeField(auto_created=True)
-
-
-class Chat(models.Model):
-    messages = models.ManyToManyField(Message)
-    user = models.ForeignKey(User, on_delete=models.PROTECT, blank=True, null=True)
+    timestamp = models.TimeField(auto_now_add=True)
     top_scoring_intent = models.CharField(max_length=255, blank=True, null=True)
     score_top_intent = models.FloatField(blank=True, null=True)
     sentiment_analysis = models.FloatField(blank=True, null=True)
     # It is a JSON, list of strings of entities
     entities = models.TextField(max_length=1024, blank=True, null=True)
+
+
+class Chat(models.Model):
+    messages = models.ManyToManyField(Message)
+    user = models.ForeignKey(User, on_delete=models.PROTECT, blank=True, null=True)
