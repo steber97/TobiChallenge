@@ -12,7 +12,7 @@ def make_query(query):
     :return:
     """
     url = base_url + "?verbose=true&timezoneOffset=-360&subscription-key={key}&q={query}"
-    url = base_url.replace("{key}",key).replace("{query}", query)
+    url = url.replace("{key}",key).replace("{query}", query)
     r = requests.get(url)
     return r.json()
 
@@ -20,7 +20,7 @@ def make_query(query):
 def get_app_info():
     url = "https://westus.api.cognitive.microsoft.com/luis/api/v2.0/apps/9db929ee-1665-4b5a-8fdf-24d5aa80b074"
     r = requests.get(url,headers={"Ocp-Apim-Subscription-Key":key})
-    print(r.json())
+    return r.json()
 
 
 def add_intent(intent):
