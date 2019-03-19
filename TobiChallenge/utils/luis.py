@@ -11,7 +11,7 @@ def make_query(query):
     :param query:
     :return:
     """
-    url = base_url + "?verbose=true&timezoneOffset=-360&subscription-key={key}&q={query}"
+    url = "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/9db929ee-1665-4b5a-8fdf-24d5aa80b074?verbose=true&timezoneOffset=-360&subscription-key={key}&q={query}"
     url = url.replace("{key}",key).replace("{query}", query)
     r = requests.get(url)
     return r.json()
