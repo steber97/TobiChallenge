@@ -50,7 +50,7 @@
         </table>
       </div>
       <br><br>
-      <h2>Intent suggeriti</h2>
+      <h2>Topic suggeriti</h2>
 
       <canvas class="my-4" id="myChart" width="900" height="380"></canvas>
     </main>
@@ -75,60 +75,89 @@
   <!-- Graphs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
   <script>
-    var ctx = document.getElementById("myChart");
-    var myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        datasets: [{
-          data: [15339, 21345, 18483, 24003, 23489, 24092, 12034],
-          lineTension: 0,
-          backgroundColor: 'transparent',
-          borderColor: '#007bff',
-          borderWidth: 4,
-          pointBackgroundColor: '#007bff'
-        }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero: false
-            }
+    function createGraph() {
+      var values = [];
+      for(var i of all_labels){
+        values.push(labels_counter[i]);
+      }
+
+      var ctx = document.getElementById("myChart");
+      var myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: all_labels,
+          datasets: [{
+            data: values,
+            lineTension: 0,
+            backgroundColor: 'transparent',
+            borderColor: '#007bff',
+            borderWidth: 4,
+            pointBackgroundColor: '#007bff'
           }]
         },
-        legend: {
-          display: false,
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: false
+              }
+            }]
+          },
+          legend: {
+            display: false,
+          }
         }
-      }
-    });
+      });
+    }
 
-    data = [
-      "Vorrei cambiare piano di studi",
-      "Come faccio ad inserire un esame nel piano di studi?",
-      "Aggiorna il libretto inserendo l'esame di Analisi"
-    ];
+    data = [];
+    all_labels = [];
+    labels_counter = {};
 
     $(document).ready(function () {
       prendifrasi();
     });
 
+    function getFrasi() {
+      $.get("/dashboard", { tipo: "1" }, function (json) {
+        data = JSON.parse(json);
+      });
+    }
+
     function prendifrasi() {
       jQuery.ajaxSetup({ async: false });
+      getFrasi();
       for (var i = 0; i < data.length; i++) {
         getData(data[i], i + 1);
       }
+      createGraph();
       jQuery.ajaxSetup({ async: true });
     }
 
     function getData(text, i) {
-      $.get("/dashboard", { text: text }, function (data) {
-        data = JSON.parse(data);
+      $.get("/dashboard", { text: text }, function (json) {
+        json = JSON.parse(json)[0];
+        
+        if ($.inArray(json[0], all_labels) == -1){
+          all_labels.push(json[0]);
+          labels_counter[json[0]] = 1;
+        }
+        else{
+          labels_counter[json[0]]++;
+        }
+        if ($.inArray(json[1], all_labels) == -1){
+          all_labels.push(json[1]);
+          labels_counter[json[1]] = 1;
+        }
+        else{
+          labels_counter[json[1]]++;
+        }
+
         $('#tabella').append(`<tr>
-              <td>${i}</td>
-              <td>${text}</td>
-              <td>${data.join(", ")}</td>
-            </tr>`);
+            <td>${i}</td>
+            <td>${text}</td>
+            <td>${json.join(", ")}</td>
+          </tr>`);
       });
     }
   </script>

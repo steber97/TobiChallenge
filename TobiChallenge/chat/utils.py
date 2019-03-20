@@ -250,7 +250,7 @@ def create_reply(message):
     else:
         reply = "Non ho capito"
         #need to learn
-        NewIntent(message.text).save()
+        NewIntent(text=message.text).save()
 
     return reply
 

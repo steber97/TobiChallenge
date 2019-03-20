@@ -29,6 +29,6 @@ class Dashboard(APIView):
         else:
             elems = []
             for i in NewIntent.objects.all():
-                elems.append(i)
+                elems.append(i.text)
             text = json.dumps(elems)
             return HttpResponse(text)
