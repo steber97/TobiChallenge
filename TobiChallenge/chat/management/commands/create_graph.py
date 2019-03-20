@@ -6,7 +6,7 @@ import sys
 from datetime import *
 
 # sys.path.append("../../grafo")
-from grafo import Grafo
+from chat.grafo import Grafo
 
 from chat.models import *
 
