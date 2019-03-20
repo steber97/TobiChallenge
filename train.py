@@ -1,11 +1,4 @@
-def estrai(item, ldamodel):
-    def takeSecond(elem):
-        return elem[1]
-    s = list(sorted(item, key=takeSecond, reverse=True))
-    idx = s[0][0]
-    topics = ldamodel.print_topics(num_words=2)
-    topic = topics[idx][1].split("\"")
-    return [topic[1], topic[3]]
+import pickle
 
 def process(text_data):
     import spacy
@@ -56,18 +49,14 @@ def process(text_data):
 
     from gensim import corpora
     dictionary = corpora.Dictionary(text_data)
+    pickle.dump(dictionary, open("dictionary.p", "wb"))
     corpus = [dictionary.doc2bow(text) for text in text_data]
 
     import gensim
     NUM_TOPICS = 3
     ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, id2word=dictionary, passes=20)
-    
-    res = []
-    for i in ldamodel.get_document_topics(corpus):
-        res.append(estrai(i, ldamodel))
 
     ldamodel.save('model3.gensim')
-
 
 with open("test.txt") as f:
     data = f.readlines()
@@ -76,7 +65,4 @@ data_s = []
 for i in data:
     data_s.append(i.strip())
 
-model = process(data_s)
-
-
-
+process(data_s)
