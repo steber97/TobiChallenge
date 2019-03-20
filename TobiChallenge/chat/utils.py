@@ -48,12 +48,6 @@ intent_entities_map = {
 }
 
 def luis_connector(query):
-
-    # graph is of type Graph
-    try:
-        graph = pickle.load(open("graph.p", "rb"))
-    except:
-        graph = Grafo()
     json_res = utils.luis.make_query(query)
     print(json_res)
 
@@ -75,25 +69,30 @@ def luis_connector(query):
         entities=dict_of_entities
     )
 
+    message.save()
+    return message
+
+
+def graph_prediction(message):
+    # graph is of type Graph
+    try:
+        graph = pickle.load(open("graph.p", "rb"))
+    except:
+        graph = Grafo()
+
     try:
         last_message = Message.objects.order_by('-timestamp').first().top_scoring_intent
     except:
-        print("except!")
         last_message = None
 
-    message.save()
-
-    print("last message")
-    print(last_message)
-    print("message")
-    print(message)
     graph.update_edge(last_message, message.top_scoring_intent)
-    print("adj list for top scoring message")
-    graph.print_adj_list(last_message)
+    #graph.print_adj_list(message.top_scoring_intent)
     pickle.dump(graph, open("graph.p", "wb"))
 
     prevision, prob = graph.get_most_prob(message.top_scoring_intent)
-    if prob < 0.5:
+    print("msg:", message.top_scoring_intent)
+    print("probs:", prevision, prob)
+    if prob is None or prob < 0.5:
         prevision = None
 
     prevision = Message(
@@ -101,10 +100,11 @@ def luis_connector(query):
         top_scoring_intent=prevision,
         score_top_intent=1,
         sentiment_analysis=0.5,
-        entities=dict_of_entities
+        entities=message.entities
     )
+    prevision.save()
+    
     return message, prevision
-
 
 def get_affirmative_answer():
     ans = ["OK","Va bene", "Fatto", "Certamente", "Nessun problema"]
@@ -258,9 +258,6 @@ def calculate_intent(message):
             'last_intent_score': None,
             'entities': None
         }
-    print("enter calculate intent")
-    for el in session.keys():
-        print(el)
 
     error_var = False
     try:
@@ -272,22 +269,21 @@ def calculate_intent(message):
         entities = {}
     
     if message.top_scoring_intent == "Continue" and session['last_intent'] is not None :
-        print('useless top scoring intent')
+        #print('useless top scoring intent')
         error_var = True
         last_intent = session['last_intent']
         last_intent_score = session['last_intent_score']
     elif message.score_top_intent < 0.3 and session['last_intent'] is not None:
-        print('score of intent is too low')
+        #print('score of intent is too low')
         last_intent = session['last_intent']
         last_intent_score = session['last_intent_score']
     else:
-        print('update')
+        #print('update')
         session['last_intent'] = message.top_scoring_intent
         last_intent = message.top_scoring_intent
         session['last_intent_score'] = message.score_top_intent
         last_intent_score = message.score_top_intent
 
-    print(message.entities)
     for entity in message.entities:
         print(entity)
         entities[entity] = message.entities[entity]
@@ -305,23 +301,34 @@ def calculate_intent(message):
     message.score_top_intent = last_intent_score
     message.entities = entities
 
-    print(message.top_scoring_intent)
-    print(message.score_top_intent)
-    print(message.entities)
-    print(error_var)
-
     pickle.dump(session, open("session.p", "wb"))
 
     return message, error_var
 
 
 def manage_chat(text_of_message, user, request):
-
-    print(request)
-
-    message, prevision = luis_connector(text_of_message)
+    message = luis_connector(text_of_message)
 
     message, error = calculate_intent(message)
 
-    return create_reply(message)
+    message, prevision = graph_prediction(message)
+
+    message.save()
+
+    risposta = [ create_reply(message) ]
+    print("prevision:", prevision.top_scoring_intent)
+    if prevision.top_scoring_intent is not None and prevision.top_scoring_intent in ["GetMedia", "GetTaxInfo", "GetLectureTime", "GetExamResult", "GetExamInfo"]:
+        ok = True
+        for key in intent_entities_map[prevision.top_scoring_intent]:
+            try: 
+                if len(prevision.entities[key]) != 1:
+                    ok = False
+            except:
+                ok = False
+        if ok:
+            risposta.append(create_reply(prevision))
+
+    prevision.delete()
+
+    return risposta
 

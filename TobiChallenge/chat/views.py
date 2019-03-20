@@ -53,8 +53,9 @@ class ChatApiMessage(APIView):
 
         to_send = manage_chat(activity.text, activity.channel_data['clientActivityID'], self.request)
 
-        reply = ChatApiMessage.__create_reply_activity(activity, to_send)
-        connector.conversations.send_to_conversation(reply.conversation.id, reply)
+        for msg in to_send:
+            reply = ChatApiMessage.__create_reply_activity(activity, msg)
+            connector.conversations.send_to_conversation(reply.conversation.id, reply)
         return HttpResponse(status=200)
 
     def __unhandled_activity(self):
