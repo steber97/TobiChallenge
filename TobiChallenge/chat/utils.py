@@ -4,6 +4,7 @@ import pickle
 import random
 
 
+
 class Grafo:
     def __init__(self):
         self.adj = {}
