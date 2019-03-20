@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 
 class Course(models.Model):
     name = models.CharField(max_length=255)
+    cfu = models.IntegerField(blank=True,null=True)
 
 
 class DegreeCourse(models.Model):
@@ -22,6 +23,7 @@ class Exam(models.Model):
     date = models.DateTimeField()
     room = models.CharField(max_length=255)
     professor = models.ForeignKey(Professor, on_delete=models.PROTECT, blank=True, null=True)
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, blank=True, null=True)
 
 
 class Student(models.Model):
