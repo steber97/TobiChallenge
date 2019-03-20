@@ -205,7 +205,15 @@ def create_reply(message):
             for e in en:
                 reply += "- "+e+"\n"
         else:
-            reply = "La prossima lezione di '"+ en[0] + "' sarà alle "+random.choice(['8:30','9:30','10:30','13:30','14:30','15:30','16:30','17:30'])+" in aula "+random.choice(['A102', 'A104', 'A107', 'A205', 'A206', 'A207', 'A208'])
+            props = get_exam_props(message)
+            ora = random.choice(['8:30','9:30','10:30','13:30','14:30','15:30','16:30','17:30'])
+            aula = random.choice(['A102', 'A104', 'A107', 'A205', 'A206', 'A207', 'A208'])
+            if 'quando' in props:
+                reply = "La lezione '" + en[0] + "' si svolgerà alle ore " + ora
+            elif 'dove' in props:
+                reply = "La lezione '" + en[0] + "' si svolgerà in aula " + aula
+            if len(props) == 0 or len(props) > 1:
+                reply = "La prossima lezione di '"+ en[0] + "' sarà alle "+ora+" in aula "+aula
     elif top == "RegisterToExam":
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
