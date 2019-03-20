@@ -249,6 +249,8 @@ def create_reply(message):
         reply = "Come scusa?"
     else:
         reply = "Non ho capito"
+        #need to learn
+        NewIntent(message.text).save()
 
     return reply
 

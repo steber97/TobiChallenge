@@ -39,18 +39,18 @@ def prepare_text_for_lda(text):
     tokens = [get_lemma2(token) for token in tokens]
     return tokens
 
-import gensim    
-res = []
+import gensim   
 
-dictionary = pickle.load(open('dictionary.p', 'rb'))
-ldamodel = gensim.models.ldamodel.LdaModel.load('model3.gensim')
+def elaborate(text_data): 
+    res = []
+    dictionary = pickle.load(open('dictionary.p', 'rb'))
+    ldamodel = gensim.models.ldamodel.LdaModel.load('model3.gensim')
 
-text_data = ["prova prova prova"]
 
-text_data = list(map(prepare_text_for_lda, text_data))
-text_data = [dictionary.doc2bow(text) for text in text_data]
+    text_data = list(map(prepare_text_for_lda, text_data))
+    text_data = [dictionary.doc2bow(text) for text in text_data]
 
-for i in ldamodel.get_document_topics(text_data):
-    res.append(estrai(i, ldamodel))
+    for i in ldamodel.get_document_topics(text_data):
+        res.append(estrai(i, ldamodel))
 
-print(res)
+    return res

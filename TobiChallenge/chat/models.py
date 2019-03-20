@@ -64,3 +64,7 @@ class Message(models.Model):
 class Chat(models.Model):
     messages = models.ManyToManyField(Message)
     user = models.ForeignKey(User, on_delete=models.PROTECT, blank=True, null=True)
+
+
+class NewIntent(models.Model):
+    text = models.TextField(max_length=1024)
