@@ -1,7 +1,7 @@
 import utils.luis
 from .models import Message
-import json
 import pickle
+import random
 
 
 intent_entities_map = {
@@ -65,6 +65,21 @@ def luis_connector(query):
 
     return message
 
+def get_affirmative_answer():
+    ans = ["OK","Va bene", "Fatto", "Certamente", "Nessun problema"]
+    return random.choice(ans)
+
+def get_greeting():
+    ans = ["Ciao! Come posso aiutarti?"]
+    return random.choice(ans)
+
+
+def get_exams(message):
+    try:
+        aaaa= message.entities['Exams']
+    except:
+        aaaa= []
+    return aaaa
 
 def create_reply(message):
     """
@@ -74,30 +89,85 @@ def create_reply(message):
     """
     top = message.top_scoring_intent
     reply = ""
+    if top == "Continue":
+        reply = "Informazione prima"
+        return reply
+    if message.score_top_intent<0.5:
+        top = "NONHOCAPITO"
+
     if top == "CallSupport":
-        reply = "Stanno tutti a dormire"
+        reply = "Certamente! Puoi contattare il supporto studenti al seguente indirizzo: supportostudentipovo@unitn.it"
     elif top == "CancelFromExam":
-        en = message.entities
-        if len(en['Exams'])>1:
+        en = get_exams(message)
+        if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
         else:
-            reply = "OK"
+            reply = get_affirmative_answer() + ", ti ho rimosso dall'esame '" + en[0] + "'"
+    elif top == "CancelPreviousIntent":
+        reply = get_affirmative_answer()
+    elif top == "GetExamInfo":
+        en = get_exams(message)
+        if len(en)>1 or len(en)==0:
+            reply = "Quale esame?\n"
+        else:
+            reply = "Ecco le informazioni sull'esame: '" + en[0] + "'\nData: mai\nOra: mai\nAula: mai\nCFU: 9"
+    elif top == "GetExamResult":
+        en = get_exams(message)
+        if len(en)>1 or len(en)==0:
+            reply = "Quale esame?\n"
+        else:
+            reply = "Il voto dell'esame '" +  en[0] + "' è 28"
+    elif top == "GetLectureTime":
+        en = get_exams(message)
+        if len(en)>1 or len(en)==0:
+            reply = "Quale corso?\n"
+        else:
+            reply = "La prossima lezione di '"+ en[0] + "' sarà alle TODO in alua TODO"
+    elif top == "RegisterToExam":
+        en = get_exams(message)
+        if len(en)>1 or len(en)==0:
+            reply = "Quale esame?\n"
+        else:
+            reply = get_affirmative_answer() + ", ti ho iscritto all'esame '" + en[0] + "'"
+    elif top == "GetMedia":
+        reply = "La tua media è 30L"
+    elif top == "GetTaxInfo":
+        reply = "Non hai tasse da pagare!"
+    elif top == "Introduction":
+        reply = get_greeting()
+    elif top == "Preludio":
+        pass
+    elif top == "None":
+        reply = "Come scusa?"
+    else:
+        reply = "Non ho capito"
+
     return reply
 
 
-def calculate_intent(session, message):
+def calculate_intent(message):
 
     try:
         session = pickle.load(open("session.p", "rb"))
     except Exception:
-        session = {}
+        session = None
 
+    if session is None:
+        session = {
+            'last_intent': None,
+            'last_intent_score': None,
+            'entities': None
+        }
     print("enter calculate intent")
     for el in session.keys():
         print(el)
 
     error_var = False
-    entities = session['entities']
+    try:
+        entities = session['entities']
+    except:
+        entities = None
+
     if entities is None:
         entities = {}
     
@@ -149,14 +219,9 @@ def manage_chat(text_of_message, user, request):
 
     print(request)
 
-    session = request.session
-
     message = luis_connector(text_of_message)
 
-    message, error = calculate_intent(session, message)
+    message, error = calculate_intent(message)
 
-    # A questo punto siamo sicuri che entities sono al massimo una per tipo.
-
-
-    return str(text_of_message) + " " + str(user)
+    return create_reply(message)
 
