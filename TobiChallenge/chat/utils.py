@@ -94,7 +94,9 @@ def luis_connector(query):
     dict_of_entities = {}
     for el in json_res['entities']:
         try:
-            dict_of_entities[el['type']] = dict_of_entities[el['type']] + el['resolution']['values']
+            for i in el['resolution']['values']:
+                if i not in dict_of_entities[el['type']]:
+                    dict_of_entities[el['type']].append(dict_of_entities[el['type']] + el['resolution']['values'])
         except:
             dict_of_entities[el['type']] = el['resolution']['values']
     print(dict_of_entities)
@@ -180,6 +182,8 @@ def create_reply(message):
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
             try:
                 course = Course.objects.get(name=en[0])
@@ -194,6 +198,8 @@ def create_reply(message):
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
             try:
                 course = Course.objects.get(name=en[0])
@@ -217,6 +223,8 @@ def create_reply(message):
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
             try:
                 voto = ExamGiven.objects.get(course=Course.objects.get(name=en[0])).mark
@@ -227,12 +235,16 @@ def create_reply(message):
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale corso?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
-            reply = "La prossima lezione di '"+ en[0] + "' sarà alle 17:30 in aula A105"
+            reply = "La prossima lezione di '"+ en[0] + "' sarà alle "+random.choice(['8:30','9:30','10:30','13:30','14:30','15:30','16:30','17:30'])+" in aula "+random.choice(['A102', 'A104', 'A107', 'A205', 'A206', 'A207', 'A208'])
     elif top == "RegisterToExam":
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
             try:
                 me = Student.objects.all()[0]
@@ -292,12 +304,12 @@ def calculate_intent(message):
     if entities is None:
         entities = {}
     
-    if message.top_scoring_intent in ['None', 'Continue', 'Preludio', 'Introduction'] and session['last_intent'] is not None :
+    if message.top_scoring_intent == "Continue" and session['last_intent'] is not None :
         print('useless top scoring intent')
         error_var = True
         last_intent = session['last_intent']
         last_intent_score = session['last_intent_score']
-    elif message.score_top_intent < 0.5 and session['last_intent'] is not None:
+    elif message.score_top_intent < 0.3 and session['last_intent'] is not None:
         print('score of intent is too low')
         last_intent = session['last_intent']
         last_intent_score = session['last_intent_score']
