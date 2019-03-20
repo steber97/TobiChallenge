@@ -4,6 +4,40 @@ import pickle
 import random
 
 
+class Grafo:
+    def __init__(self):
+        self.adj = {}
+
+    def update_edge(self, a, b):
+        if a is None:
+            return
+        if a not in self.adj:
+            self.adj[a] = {}
+            self.adj[a][b] = 1
+
+        else:
+            if b not in self.adj[a]:
+                self.adj[a][b] = 1
+            else:
+                self.adj[a][b] += 1
+        return
+
+    def print_adj_list(self, node):
+        if node in self.adj:
+            print(self.adj[node])
+
+    def get_most_prob(self, node):
+        best_node = -1
+        max_val = -1
+        total = 0
+        for el in self.adj[node]:
+            total += self.adj[node][el]
+            if self.adj[node][el] > max_val and el != node:
+                max_val = self.adj[node][el]
+                best_node = el
+        return best_node, max_val/total
+
+
 intent_entities_map = {
   "CallSupport": [
   ],
@@ -46,6 +80,12 @@ intent_entities_map = {
 }
 
 def luis_connector(query):
+
+    # graph is of type Graph
+    try:
+        graph = pickle.load(open("graph.p", "rb"))
+    except:
+        graph = Grafo()
     json_res = utils.luis.make_query(query)
     print(json_res)
 
@@ -61,9 +101,37 @@ def luis_connector(query):
         sentiment_analysis=json_res['sentimentAnalysis']['score'],
         entities=dict_of_entities
     )
+
+    try:
+        last_message = Message.objects.order_by('-timestamp').first().top_scoring_intent
+    except:
+        print("except!")
+        last_message = None
+
     message.save()
 
-    return message
+    print("last message")
+    print(last_message)
+    print("message")
+    print(message)
+    graph.update_edge(last_message, message.top_scoring_intent)
+    print("adj list for top scoring message")
+    graph.print_adj_list(last_message)
+    pickle.dump(graph, open("graph.p", "wb"))
+
+    prevision, prob = graph.get_most_prob(message.top_scoring_intent)
+    if prob < 0.5:
+        prevision = None
+
+    prevision = Message(
+        text=None,
+        top_scoring_intent=prevision,
+        score_top_intent=1,
+        sentiment_analysis=0.5,
+        entities=dict_of_entities
+    )
+    return message, prevision
+
 
 def get_affirmative_answer():
     ans = ["OK","Va bene", "Fatto", "Certamente", "Nessun problema"]
@@ -219,7 +287,7 @@ def manage_chat(text_of_message, user, request):
 
     print(request)
 
-    message = luis_connector(text_of_message)
+    message, prevision = luis_connector(text_of_message)
 
     message, error = calculate_intent(message)
 
