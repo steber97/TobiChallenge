@@ -4,8 +4,11 @@ def estrai(item, ldamodel):
     s = list(sorted(item, key=takeSecond, reverse=True))
     idx = s[0][0]
     topics = ldamodel.print_topics(num_words=2)
+    if item==150:
+        print (topics)
     topic = topics[idx][1].split("\"")
     return [topic[1], topic[3]]
+
 
 def process(text_data):
     import spacy
@@ -65,6 +68,7 @@ def process(text_data):
     res = []
     for i in ldamodel.get_document_topics(corpus):
         res.append(estrai(i, ldamodel))
+
 
     ldamodel.save('model3.gensim')
 

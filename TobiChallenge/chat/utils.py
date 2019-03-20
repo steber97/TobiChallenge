@@ -86,12 +86,12 @@ def graph_prediction(message):
         last_message = None
 
     graph.update_edge(last_message, message.top_scoring_intent)
-    #graph.print_adj_list(message.top_scoring_intent)
+
+    print("adj list for top scoring message")
+    graph.print_adj_list(message.top_scoring_intent)
     pickle.dump(graph, open("graph.p", "wb"))
 
     prevision, prob = graph.get_most_prob(message.top_scoring_intent)
-    print("msg:", message.top_scoring_intent)
-    print("probs:", prevision, prob)
     if prob is None or prob < 0.5:
         prevision = None
 
@@ -325,7 +325,7 @@ def manage_chat(text_of_message, user, request):
 
     risposta = [ create_reply(message) ]
     print("prevision:", prevision.top_scoring_intent)
-    if prevision.top_scoring_intent is not None and prevision.top_scoring_intent in ["GetMedia", "GetTaxInfo", "GetLectureTime", "GetExamResult", "GetExamInfo"]:
+    if prevision.top_scoring_intent is not None and prevision.top_scoring_intent in ["CallSupport", "GetMedia", "GetTaxInfo", "GetLectureTime", "GetExamResult", "GetExamInfo"]:
         ok = True
         for key in intent_entities_map[prevision.top_scoring_intent]:
             try: 
