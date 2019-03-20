@@ -2,6 +2,7 @@ import utils.luis
 from .models import Message
 import pickle
 import random
+from .models import *
 
 
 
@@ -93,7 +94,12 @@ def luis_connector(query):
     # Perform insertion of chat attributes (intent and entities)
     dict_of_entities = {}
     for el in json_res['entities']:
-        dict_of_entities[el['type']] = el['resolution']['values']
+        try:
+            for i in el['resolution']['values']:
+                if i not in dict_of_entities[el['type']]:
+                    dict_of_entities[el['type']].append(dict_of_entities[el['type']] + el['resolution']['values'])
+        except:
+            dict_of_entities[el['type']] = el['resolution']['values']
     print(dict_of_entities)
     message = Message(
         text=json_res['query'],
@@ -150,6 +156,13 @@ def get_exams(message):
         aaaa= []
     return aaaa
 
+def get_exam_props(message):
+    try:
+        aaaa= message.entities['Exam Properties']
+    except:
+        aaaa= []
+    return aaaa
+
 def create_reply(message):
     """
     Basically a huge IF wall
@@ -161,7 +174,7 @@ def create_reply(message):
     if top == "Continue":
         reply = "Informazione prima"
         return reply
-    if message.score_top_intent<0.5:
+    if message.score_top_intent<0.3:
         top = "NONHOCAPITO"
 
     if top == "CallSupport":
@@ -170,38 +183,90 @@ def create_reply(message):
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
-            reply = get_affirmative_answer() + ", ti ho rimosso dall'esame '" + en[0] + "'"
+            try:
+                course = Course.objects.get(name=en[0])
+                ExamSubscription.objects.get(exam=Exam.objects.get(course=course)).delete()
+                reply = get_affirmative_answer() + ", ti ho rimosso dall'esame '" + en[0] + "'"
+            except:
+                reply = "Non eri iscritto all'esame '" + en[0] + "'"
+
     elif top == "CancelPreviousIntent":
         reply = get_affirmative_answer()
     elif top == "GetExamInfo":
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
-            reply = "Ecco le informazioni sull'esame: '" + en[0] + "'\nData: mai\nOra: mai\nAula: mai\nCFU: 9"
+            try:
+                course = Course.objects.get(name=en[0])
+                exam = Exam.objects.get(course=course)
+                data = exam.date.strftime('%d/%m/%Y')
+                ora = exam.date.strftime('%H:%M')
+                props = get_exam_props(message)
+                if 'quando' in props:
+                    reply = "L'esame '" + en[0] + "' si svolgerà in data " + data + " alle ore " + ora
+                elif 'chi' in props:
+                    reply = "L'esame '" + en[0] + "' sarà tenuto dal professore " + exam.professor.name
+                elif 'dove' in props:
+                    reply = "L'esame '" + en[0] + "' si svolgerà in aula " + exam.room
+                elif 'CFU' in props:
+                    reply = "L'esame '" + en[0] + "' vale " + str(exam.course.cfu) + " CFU"
+                if len(props) == 0 or len(props) > 1:
+                    reply = "Ecco le informazioni sull'esame: '" + en[0] + "'\nData: " + data + "\nOra: " + ora + "\nAula: " + exam.room + "\nCFU: " + str(course.cfu)
+            except:
+                reply = "Non esiste l'esame: '" + en[0] + "'"
     elif top == "GetExamResult":
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
-            reply = "Il voto dell'esame '" +  en[0] + "' è 28"
+            try:
+                voto = ExamGiven.objects.get(course=Course.objects.get(name=en[0])).mark
+                reply = "Il voto dell'esame '" +  en[0] + "' è " + str(voto)
+            except:
+                reply = "Non hai ancora dato l'esame '" + en[0] + "'"
     elif top == "GetLectureTime":
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale corso?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
-            reply = "La prossima lezione di '"+ en[0] + "' sarà alle TODO in alua TODO"
+            reply = "La prossima lezione di '"+ en[0] + "' sarà alle "+random.choice(['8:30','9:30','10:30','13:30','14:30','15:30','16:30','17:30'])+" in aula "+random.choice(['A102', 'A104', 'A107', 'A205', 'A206', 'A207', 'A208'])
     elif top == "RegisterToExam":
         en = get_exams(message)
         if len(en)>1 or len(en)==0:
             reply = "Quale esame?\n"
+            for e in en:
+                reply += "- "+e+"\n"
         else:
-            reply = get_affirmative_answer() + ", ti ho iscritto all'esame '" + en[0] + "'"
+            try:
+                me = Student.objects.all()[0]
+                exam = Exam.objects.get(course=Course.objects.get(name=en[0]))
+                if(len(ExamSubscription.objects.filter(student=me, exam=exam)) >= 1):
+                    reply = "Eri già iscritto all'esame '" + en[0] + "'"
+                else:
+                    ExamSubscription(student=me, exam=exam).save()
+                    reply = get_affirmative_answer() + ", ti ho iscritto all'esame '" + en[0] + "'"
+            except:
+                reply = "Non c'è nessun appello per l'esame '" + en[0] + "'"
     elif top == "GetMedia":
-        reply = "La tua media è 30L"
+        somma = 0
+        for ex in ExamGiven.objects.all():
+            somma += ex.mark
+        reply = "La tua media è " + str(somma/len(ExamGiven.objects.all()))
     elif top == "GetTaxInfo":
-        reply = "Non hai tasse da pagare!"
+        tasse = ""
+        for tassa in TaxRecord.objects.all():
+            tasse += str(tassa.amount) + "€\n"
+        reply = "Devi pagare le seguenti tasse:\n" + tasse
     elif top == "Introduction":
         reply = get_greeting()
     elif top == "Preludio":
@@ -240,12 +305,12 @@ def calculate_intent(message):
     if entities is None:
         entities = {}
     
-    if message.top_scoring_intent in ['None', 'Continue', 'Preludio', 'Introduction'] and session['last_intent'] is not None :
+    if message.top_scoring_intent == "Continue" and session['last_intent'] is not None :
         print('useless top scoring intent')
         error_var = True
         last_intent = session['last_intent']
         last_intent_score = session['last_intent_score']
-    elif message.score_top_intent < 0.5 and session['last_intent'] is not None:
+    elif message.score_top_intent < 0.3 and session['last_intent'] is not None:
         print('score of intent is too low')
         last_intent = session['last_intent']
         last_intent_score = session['last_intent_score']
