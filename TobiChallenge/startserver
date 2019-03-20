@@ -1,4 +1,6 @@
 rm session.p
 touch session.p
 
+python manage.py create_graph
+
 python manage.py runserver
