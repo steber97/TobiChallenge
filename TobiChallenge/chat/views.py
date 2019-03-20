@@ -51,7 +51,7 @@ class ChatApiMessage(APIView):
 
         #call elaborate function [input: activity.text, output: to_send]
 
-        to_send = manage_chat(activity.text, activity.channel_data['clientActivityID'])
+        to_send = manage_chat(activity.text, activity.channel_data['clientActivityID'], self.request)
 
         reply = ChatApiMessage.__create_reply_activity(activity, to_send)
         connector.conversations.send_to_conversation(reply.conversation.id, reply)
