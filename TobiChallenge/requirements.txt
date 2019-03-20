@@ -22,7 +22,6 @@ idna==2.8
 ipython==7.3.0
 ipython-genutils==0.2.0
 isodate==0.6.0
-it-core-news-sm==2.1.0
 jedi==0.13.3
 jmespath==0.9.4
 jsonschema==2.6.0
