@@ -8,10 +8,13 @@ Attualmente il nostro prototipo è in grado di supportare diverse funzioni di ba
 
 I valori aggiunti che il nostro progetto offre rispetto alle tradizionali soluzioni sono:
 
-Language Understanding System: utilizziamo il servizio luis.ai offerto da Microsoft per l’analisi testuale e quindi il riconoscimento dei concetti chiave di un messaggio
-Context Retrival: se dall’ultimo messaggio non è ben chiaro il contesto a cui ci si riferisce, vengono analizzati i messaggi nello storico alla ricerca dell’ultimo contesto valido all’interno della conversazione, e se questo contesto risulta ancora valido allora viene utilizzato. A livello tecnico questo viene implementato tramite uno stack che viene risalito man mano alla ricerca del contesto.
-Context Prediction: in base ai pattern di utilizzo del sistema da parte degli utenti viene addestrata una Markov Chain in grado di prevedere il probabile comportamento futuro del singolo utente in modo da anticiparlo e ridurre il tempo necessario per ottenere le informazioni desiderate.
-Dashboard: volevamo rendere disponibile all’amministratore statistiche riguardo i casi in cui l’intervento umano si rendeva necessario per sopperire alle mancanze del bot. In questo modo visualizzando le richieste più frequenti si possono decidere di sviluppare nuove funzionalità da integrare nel sistema. A livello tecnico questo è realizzato facendo un clustering dello storico degli interventi umani e generando i topic di questi clusters tramite un modello LDA.
+* Language Understanding System: utilizziamo il servizio luis.ai offerto da Microsoft per l’analisi testuale e quindi il riconoscimento dei concetti chiave di un messaggio
+
+* Context Retrival: se dall’ultimo messaggio non è ben chiaro il contesto a cui ci si riferisce, vengono analizzati i messaggi nello storico alla ricerca dell’ultimo contesto valido all’interno della conversazione, e se questo contesto risulta ancora valido allora viene utilizzato. A livello tecnico questo viene implementato tramite uno stack che viene risalito man mano alla ricerca del contesto
+
+* Context Prediction: in base ai pattern di utilizzo del sistema da parte degli utenti viene addestrata una Markov Chain in grado di prevedere il probabile comportamento futuro del singolo utente in modo da anticiparlo e ridurre il tempo necessario per ottenere le informazioni desiderate.
+
+* Dashboard: volevamo rendere disponibile all’amministratore statistiche riguardo i casi in cui l’intervento umano si rendeva necessario per sopperire alle mancanze del bot. In questo modo visualizzando le richieste più frequenti si possono decidere di sviluppare nuove funzionalità da integrare nel sistema. A livello tecnico questo è realizzato facendo un clustering dello storico degli interventi umani e generando i topic di questi clusters tramite un modello LDA.
 
 Per installare ed eseguire il pacchetto, è necessario che i seguenti requisiti siano soddisfatti:
 - Python==3.7.1
