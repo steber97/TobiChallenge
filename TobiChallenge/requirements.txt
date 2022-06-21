@@ -28,7 +28,7 @@ jsonschema==2.6.0
 msrest==0.4.29
 murmurhash==1.0.2
 nltk==3.4
-numpy==1.16.2
+numpy==1.22.0
 oauthlib==3.0.1
 parso==0.3.4
 pexpect==4.6.0
